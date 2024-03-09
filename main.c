@@ -37,9 +37,8 @@ VOID DriverDetector(){
         CountedDrivers = CbNeeded / sizeof(Drivers[0]);
         printf("\n\x1b[31m\tDrivers Found : (%d)\n\x1b[0m", CountedDrivers);
         printf("====================================\n");
-        printf("\033[0;34m[i] Detected Interested Drivers\n\033[0m");
+        printf("\033[0;34m[i] Searching For Interesting Drivers...\n\033[0m");
         printf("====================================\n");
-
 
         for(int i = 0; i < CountedDrivers; i++){
 
@@ -52,21 +51,9 @@ VOID DriverDetector(){
                         //
                         // Uncomment this to list all the drivers
                         //
-                        /*printf("%s Found !", DriverPath);*/
-                        for(int j = 0; j < numDriversToSearch; j++){
-
-                            //
-                            // Check if the current driver matches any of the drivers in the search list
-                            //
-                            if(_strcmpi(DriverName, driversToSearch[j]) == 0){
-
-                                printf("\033[0;32mDriver Found: \033[0m");
-                                printf("\033[0;33m%s\033[0m\n", DriverPath);
-                            }
-                        }
+                        printf("%s \x1b[32mFound\x1b[0m !\n", DriverPath);
 
                     }
-
                 }else{
                     printf("[!] GetDeviceDriverFileNameA Failed, ERROR->(%d) \n", GetLastError());
                 }
@@ -74,11 +61,38 @@ VOID DriverDetector(){
                 printf("[!] GetDeviceDriverBaseNameA Failed, ERROR->(%d) \n", GetLastError());
             }
         }
-
-    }else{
-        printf("[!] EnumDeviceDrivers Failed, ERROR->(%d) \n", GetLastError());
+        printf("====================================\n");
+        printf("\033[0;34m[*] Interested Drivers Detected !\n\033[0m");
+        printf("====================================\n");
+        for(int j = 0; j < numDriversToSearch; j++){
+            DWORD DriverFound = { 0 };
+            for(int i = 0; i < CountedDrivers; i++){
+                if(GetDeviceDriverBaseNameA(Drivers[i], DriverName, sizeof(DriverName) / sizeof(DriverName[0]))){
+                    //
+                    // Get the whole path
+                    //
+                    if(GetDeviceDriverFileNameA(Drivers[i], DriverPath, MAX_PATH)) {
+                        if (strstr(DriverPath, ".sys")) {
+                            //
+                            // Check if the current driver matches any of the drivers in the search list
+                            //
+                            if (_strcmpi(DriverName, driversToSearch[j]) == 0) {
+                                printf("\033[0;32m[+] Driver Found: \033[0m");
+                                printf("\033[0;33m%s\033[0m\n", DriverPath);
+                                DriverFound = 1;
+                            }
+                        }
+                    }else{
+                        printf("[!] GetDeviceDriverFileNameA Failed, ERROR->(%d) \n", GetLastError());
+                    }
+                }else{
+                    printf("[!] GetDeviceDriverBaseNameA Failed, ERROR->(%d) \n", GetLastError());
+                }
+            } if (!DriverFound) {
+                printf("\x1b[31m[-] Driver Not Found: \x1b[0m\x1b[37m%s\x1b[0m\n", driversToSearch[j]);
+            }
+        }
     }
-
 }
 /*--------------------------------------------------------------------------------------------------------------------*/
 //
